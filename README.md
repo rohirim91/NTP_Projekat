@@ -43,11 +43,11 @@ Vizuelizacija upotrebom 2 praga bila bi u stilu heat mape, gde bi koordinate ta�
 
 Primer vizuelizacije prostora pretrage:
 
-![](RackMultipart20210319-4-gif1qy_html_68388fe14baab03a.png)
+![image](https://user-images.githubusercontent.com/50735554/111790356-64bbe300-88c2-11eb-9239-29ae5feb104c.png)
 
 _Slika 1 - Vizuelizacija prostora pretrage u slučaju segmentacije sa jednim pragom (binarna segmentacija)_
 
-![](RackMultipart20210319-4-gif1qy_html_5c582a2cbdb2b77d.png)
+![image](https://user-images.githubusercontent.com/50735554/111790381-6ab1c400-88c2-11eb-9939-b111434e488f.png)
 
 _Slika 2 - Vizuelizacija prostora pretrage u slučaju korišćenja dva praga_
 

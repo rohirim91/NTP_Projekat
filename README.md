@@ -25,15 +25,15 @@ Dodatno, korisniku će biti omogućeno da sliku pre segmentacije obradi [Superpi
 
 # Arhitektura sistema
 
-Sistem bi bio sastavljen od 2 mikroservisa implementirana u Go jeziku i desktop klijentske aplikacije implementirane u Pharo jeziku:
+Sistem bi bio sastavljen od 2 aplikacije implementirane u Go jeziku i desktop GUI aplikacije implementirane u Pharo jeziku:
 
 - Pharo klijent – omogućava unos lokacije slike u fajl sistemu, unos željene lokacije na kojoj će se čuvati dobijene slike, unos parametara superpixels i PSO algoritma i vizuelizacija prostora pretrage ukoliko je slika segmentisana sa jednim ili dva praga.
-- Mikroservis 1 – implementacija superpixels algoritma, učitavanje slike, njena obrada i čuvanje dobijene slike.
-- Mikroservis 2 – implementacija segmentacije upotrebom PSO algoritma i Tsallis funkcije, učitavanje slike, čuvanje segmentisane slike i podataka neophodnih za vizuelizaciju prostora pretrage.
+- Golang aplikacija 1 – implementacija superpixels algoritma, učitavanje slike, njena obrada i čuvanje dobijene slike.
+- Golang aplikacija 2 – implementacija segmentacije upotrebom PSO algoritma i Tsallis funkcije, učitavanje slike, čuvanje segmentisane slike i podataka neophodnih za vizuelizaciju prostora pretrage.
 
 Komunikacija bi se odvijala putem Representational State Transfer (REST).
 
-Kao što je već rečeno, Pharo klijent bi korisniku prikazao i pretraženi prostor pretrage PSO algoritma u slučajevima korišćenja jednog i dva praga.
+Kao što je već rečeno, Pharo aplikacija bi korisniku prikazala i pretraženi prostor pretrage PSO algoritma u slučajevima korišćenja jednog i dva praga.
 
 Vizuelizovali bi se svi položaji čestice od prve do poslednje iteracije, budući da je ovakva vizuelizacija i najkorisnija korisniku, jer nudi prikaz celokupnog pretraženog prostora pretrage, što mu može biti od koristi ukoliko želi da ručno isproba neke kombinacije vrednosti pragova koje PSO algoritam nije pokrio. Primer su lokalni optimumi koji možda nisu dovoljno dobro istraženi, te jedan od njih može biti ustvari globalni optimum.
 

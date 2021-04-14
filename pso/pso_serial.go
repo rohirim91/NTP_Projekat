@@ -6,147 +6,12 @@ import (
 	"image/draw"
 	"math"
 	"math/rand"
-	"os"
 	"sort"
-	"strconv"
 
 	"github.com/anthonynsimon/bild/imgio"
 )
 
-type Particle struct {
-	speed                   []float64
-	position, best_position []float64
-	value, best_value       float64
-}
-
-func convertToUint8(position []float64) []uint8 {
-	var retval []uint8
-
-	for _, val := range position {
-		retval = append(retval, uint8(val))
-	}
-
-	return retval
-}
-
-func addVector(a []float64, b []float64) []float64 {
-	var retval = make([]float64, len(a))
-
-	for i := 0; i < len(a); i++ {
-		retval[i] = a[i] + b[i]
-	}
-	return retval
-}
-
-func subVector(a []float64, b []float64) []float64 {
-	var retval = make([]float64, len(a))
-
-	for i := 0; i < len(a); i++ {
-		retval[i] = a[i] - b[i]
-	}
-	return retval
-}
-
-func mulVectorConst(a []float64, b float64) []float64 {
-	var retval = make([]float64, len(a))
-
-	for i := 0; i < len(a); i++ {
-		retval[i] = a[i] * b
-	}
-	return retval
-}
-
-func divVectorConst(a []float64, b float64) []float64 {
-	var retval = make([]float64, len(a))
-
-	for i := 0; i < len(a); i++ {
-		retval[i] = a[i] / b
-	}
-	return retval
-}
-
-func setupProbs(thresholds []float64, pixels []uint8) []float64 {
-	var N = len(pixels)
-	var level_nums []float64
-
-	for i := 0; i < len(thresholds)+1; i++ {
-		level_nums = append(level_nums, 0)
-	}
-
-	//odredjujemo broj piksela u svakom opsegu
-	for i := 0; i < len(pixels); i++ {
-		for idx, threshold := range thresholds {
-			if float64(pixels[i]) < threshold {
-				level_nums[idx] += 1
-				break
-			} else if float64(pixels[i]) >= threshold && idx == len(thresholds)-1 {
-				level_nums[idx+1] += 1
-				break
-			}
-		}
-	}
-	//racunamo kolki udeo piksela svaki opseg sadrzi
-	return divVectorConst(level_nums, float64(N))
-}
-
-func tsallis(thresholds []float64, pixels []uint8, order int) float64 {
-	var probs = setupProbs(thresholds, pixels)
-	var sum float64 = 0
-
-	for _, prob := range probs {
-		sum += math.Pow(prob, float64(order))
-	}
-	return (1 / float64(order-1)) * (1 - sum)
-}
-
-func get_position(thresh_num int) []float64 {
-	var position []float64
-
-	for i := 0; i < thresh_num; i++ {
-		position = append(position, rand.Float64()*255)
-	}
-
-	sort.Float64s(position)
-
-	return position
-}
-
-func writePositionLog(all_positions [][]uint8) {
-	f, err := os.Create("output/all_positions.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	for i := 0; i < len(all_positions); i++ {
-		var position string
-
-		for j := 0; j < len(all_positions[i]); j++ {
-			position += strconv.Itoa(int(all_positions[i][j]))
-
-			if j != len(all_positions[i])-1 {
-				position += ";"
-			} else {
-				position += "\n"
-			}
-		}
-
-		_, err := f.WriteString(position)
-		if err != nil {
-			fmt.Println(err)
-			f.Close()
-			return
-		}
-	}
-
-	err = f.Close()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-}
-
-func pso_serial(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int) []uint8 {
+func psoSerial(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int) []uint8 {
 	var all_positions [][]uint8
 	var thresh_num = n_var + 1
 	var best_position []float64
@@ -238,8 +103,8 @@ func applyThresholds(img *image.Gray, thresholds []uint8) {
 }
 
 //n_var = 1, wi = 0.9, wf = 0.4, cpi = 0.5, cpf = 2.5, cgi = 2.5, cgf = 0.5, particle_num = 10, iter_num = 10, tsallis_order = 4
-func main() {
-	var img, err = imgio.Open("input/lena.png")
+func pso_serial_main() {
+	var img, err = imgio.Open("../input/lena.png")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -250,11 +115,11 @@ func main() {
 	var img_grey = image.NewGray(rect)
 	draw.Draw(img_grey, rect, img, rect.Min, draw.Src)
 
-	var thresholds = pso_serial(img_grey.Pix, 1, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, 100, 20, 4)
+	var thresholds = psoSerial(img_grey.Pix, 1, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, 100, 20, 4)
 	applyThresholds(img_grey, thresholds)
 	fmt.Println(thresholds)
 
-	if err := imgio.Save("output/output.png", img_grey, imgio.PNGEncoder()); err != nil {
+	if err := imgio.Save("../output/output.png", img_grey, imgio.PNGEncoder()); err != nil {
 		fmt.Println(err)
 		return
 	}

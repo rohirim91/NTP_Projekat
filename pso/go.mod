@@ -1,4 +1,4 @@
-module github.com/rohirim91/NTP_Projekat
+module github.com/rohirim91/NTP_Projekat/pso
 
 go 1.16
 

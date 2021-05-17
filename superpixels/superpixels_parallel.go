@@ -6,9 +6,10 @@ import (
 	"image/png"
 	"math"
 	"os"
+	"sync"
 )
 
-type SuperpixelsProcessor struct {
+type SuperpixelsProcessorParallel struct {
 	image        [][][]int
 	img_w, img_h int
 	K, N, S      int
@@ -18,7 +19,7 @@ type SuperpixelsProcessor struct {
 	dist         [][]float64
 }
 
-func (sp *SuperpixelsProcessor) initialize() {
+func (sp *SuperpixelsProcessorParallel) initialize() {
 	sp.N = sp.img_h * sp.img_w
 	sp.S = int(math.Sqrt(float64(sp.N / sp.K)))
 	sp.dist = make([][]float64, sp.img_h)
@@ -32,7 +33,7 @@ func (sp *SuperpixelsProcessor) initialize() {
 	}
 }
 
-func (sp *SuperpixelsProcessor) initClusters() {
+func (sp *SuperpixelsProcessorParallel) initClusters() {
 	var w = int(sp.S / 2)
 	var h = int(sp.S / 2)
 
@@ -52,7 +53,7 @@ func (sp *SuperpixelsProcessor) initClusters() {
 	}
 }
 
-func (sp *SuperpixelsProcessor) getGradient(w, h int) int {
+func (sp *SuperpixelsProcessorParallel) getGradient(w, h int) int {
 	if w+1 >= sp.img_w {
 		w = sp.img_w - 2
 	}
@@ -65,7 +66,7 @@ func (sp *SuperpixelsProcessor) getGradient(w, h int) int {
 		sp.image[h+1][w+1][2] - sp.image[h][w][2]
 }
 
-func (sp *SuperpixelsProcessor) moveClusters() {
+func (sp *SuperpixelsProcessorParallel) moveClusters() {
 	var c_grad, _h, _w, new_grad = 0, 0, 0, 0
 
 	for i := 0; i < len(sp.clusters); i++ {
@@ -87,8 +88,17 @@ func (sp *SuperpixelsProcessor) moveClusters() {
 	}
 }
 
-func (sp *SuperpixelsProcessor) updateCluster() {
-	for i := 0; i < len(sp.clusters); i++ {
+func (sp *SuperpixelsProcessorParallel) updateCluster() {
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(4)
+	for i := 0; i < 4; i++ {
+		go sp._updateCluster_parallel(i*len(sp.clusters)/4, (i+1)*len(sp.clusters)/4, &waitGroup)
+	}
+	waitGroup.Wait()
+}
+
+func (sp *SuperpixelsProcessorParallel) _updateCluster_parallel(startIdx, endIdx int, wg *sync.WaitGroup) {
+	for i := startIdx; i < endIdx; i++ {
 		if len(sp.clusters[i].pixels) != 0 {
 			var sum_h, sum_w = 0, 0
 
@@ -102,9 +112,10 @@ func (sp *SuperpixelsProcessor) updateCluster() {
 			sp.clusters[i].update(_h, _w, sp.image[_h][_w][0], sp.image[_h][_w][1], sp.image[_h][_w][2])
 		}
 	}
+	wg.Done()
 }
 
-func (sp *SuperpixelsProcessor) checkLabel(h, w int) bool {
+func (sp *SuperpixelsProcessorParallel) checkLabel(h, w int) bool {
 	for _, v := range sp.label {
 		if v.h == h && v.w == w {
 			return true
@@ -113,26 +124,40 @@ func (sp *SuperpixelsProcessor) checkLabel(h, w int) bool {
 	return false
 }
 
-func (sp *SuperpixelsProcessor) updateLabel(h, w int, cluster *Cluster) {
+func (sp *SuperpixelsProcessorParallel) updateLabel(h, w int, cluster *Cluster, mutex *sync.Mutex) {
 	for i := 0; i < len(sp.label); i++ {
 		if sp.label[i].h == h && sp.label[i].w == w {
+			mutex.Lock()
 			sp.label[i].cluster = cluster
+			mutex.Unlock()
 			break
 		}
 	}
 }
 
-func (sp *SuperpixelsProcessor) removeLabelPixelsValue(h, w int) {
+func (sp *SuperpixelsProcessorParallel) removeLabelPixelsValue(h, w int, mutex *sync.Mutex) {
 	for i := 0; i < len(sp.label); i++ {
 		if sp.label[i].h == h && sp.label[i].w == w {
+			mutex.Lock()
 			sp.label[i].cluster.removePixelsValue(h, w)
+			mutex.Unlock()
 			break
 		}
 	}
 }
 
-func (sp *SuperpixelsProcessor) assign() {
-	for i := 0; i < len(sp.clusters); i++ {
+func (sp *SuperpixelsProcessorParallel) assign() {
+	var mutex = &sync.Mutex{}
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(4)
+	for i := 0; i < 4; i++ {
+		go sp._assign_parallel(i*len(sp.clusters)/4, (i+1)*len(sp.clusters)/4, mutex, &waitGroup)
+	}
+	waitGroup.Wait()
+}
+
+func (sp *SuperpixelsProcessorParallel) _assign_parallel(startIdx, endIdx int, mutex *sync.Mutex, wg *sync.WaitGroup) {
+	for i := startIdx; i < endIdx; i++ {
 		for h := sp.clusters[i].h - 2*sp.S; h < sp.clusters[i].h+2*sp.S; h++ {
 			if h < 0 || h >= sp.img_h {
 				continue
@@ -151,22 +176,26 @@ func (sp *SuperpixelsProcessor) assign() {
 
 				if d < sp.dist[h][w] {
 					if !sp.checkLabel(h, w) {
+						mutex.Lock()
 						sp.clusters[i].pixels = append(sp.clusters[i].pixels, []int{h, w})
 						sp.label = append(sp.label, Label{h: h, w: w, cluster: &sp.clusters[i]})
+						mutex.Unlock()
 					} else {
-						sp.removeLabelPixelsValue(h, w)
+						sp.removeLabelPixelsValue(h, w, mutex)
+						mutex.Lock()
 						sp.clusters[i].pixels = append(sp.clusters[i].pixels, []int{h, w})
-						sp.updateLabel(h, w, &sp.clusters[i])
+						mutex.Unlock()
+						sp.updateLabel(h, w, &sp.clusters[i], mutex)
 					}
 					sp.dist[h][w] = d
 				}
 			}
 		}
-
 	}
+	wg.Done()
 }
 
-func (sp *SuperpixelsProcessor) saveImage(path string, img image.Image) {
+func (sp *SuperpixelsProcessorParallel) saveImage(path string, img image.Image) {
 	var bounds = img.Bounds()
 	var width, height = bounds.Max.X, bounds.Max.Y
 
@@ -175,13 +204,22 @@ func (sp *SuperpixelsProcessor) saveImage(path string, img image.Image) {
 
 	var new_img = image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
+	var waitGroup sync.WaitGroup
 	for i := 0; i < len(sp.clusters); i++ {
-		for j := 0; j < len(sp.clusters[i].pixels); j++ {
-			new_img.Set(sp.clusters[i].pixels[j][1], sp.clusters[i].pixels[j][0], color.RGBA{uint8(sp.clusters[i].l), uint8(sp.clusters[i].a), uint8(sp.clusters[i].b), 0xff})
+		waitGroup.Add(4)
+		for j := 0; j < 4; j++ {
+			go sp._saveImage_parallel(i, j*len(sp.clusters[i].pixels)/4, (j+1)*len(sp.clusters[i].pixels)/4, new_img, &waitGroup)
 		}
-		//new_img.Set(sp.clusters[i].w, sp.clusters[i].h, color.RGBA{0x0, 0x0, 0x0, 0xff})
+		waitGroup.Wait()
 	}
 
 	f, _ := os.Create(path)
 	png.Encode(f, new_img)
+}
+
+func (sp *SuperpixelsProcessorParallel) _saveImage_parallel(cluster_idx, startIdx, endIdx int, new_img *image.RGBA, wg *sync.WaitGroup) {
+	for i := startIdx; i < endIdx; i++ {
+		new_img.Set(sp.clusters[cluster_idx].pixels[i][1], sp.clusters[cluster_idx].pixels[i][0], color.RGBA{uint8(sp.clusters[cluster_idx].l), uint8(sp.clusters[cluster_idx].a), uint8(sp.clusters[cluster_idx].b), 0xff})
+	}
+	wg.Done()
 }

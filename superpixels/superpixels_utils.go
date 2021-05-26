@@ -8,6 +8,11 @@ import (
 	"github.com/anthonynsimon/bild/imgio"
 )
 
+type SuperpixelsDTO struct {
+	InputPath string `json:"InputPath"`
+	Type      string `json:"Type"`
+}
+
 type Cluster struct {
 	pixels        [][]int
 	h, w, l, a, b int

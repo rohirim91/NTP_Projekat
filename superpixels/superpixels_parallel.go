@@ -215,6 +215,7 @@ func (sp *SuperpixelsProcessorParallel) saveImage(path string, img image.Image) 
 
 	f, _ := os.Create(path)
 	png.Encode(f, new_img)
+	f.Close()
 }
 
 func (sp *SuperpixelsProcessorParallel) _saveImage_parallel(cluster_idx, startIdx, endIdx int, new_img *image.RGBA, wg *sync.WaitGroup) {

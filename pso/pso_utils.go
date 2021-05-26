@@ -9,6 +9,11 @@ import (
 	"strconv"
 )
 
+type PsoDTO struct {
+	InputPath string `json:"InputPath"`
+	Type      string `json:"Type"`
+}
+
 type Particle struct {
 	speed                   []float64
 	position, best_position []float64

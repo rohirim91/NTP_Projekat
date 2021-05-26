@@ -1,16 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"image"
-	"image/draw"
 	"math"
 	"math/rand"
 	"sort"
 	"sync"
-	"time"
-
-	"github.com/anthonynsimon/bild/imgio"
 )
 
 func psoParallel(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int) []uint8 {
@@ -98,7 +93,7 @@ func psoInnerLoop(iter_no, startIdx, endIdx, particle_num, tsallis_order int, w,
 	wg.Done()
 }
 
-func applyThresholds_parallel(startIdx, endIdx int, img *image.Gray, thresholds []uint8, wg *sync.WaitGroup) {
+func _applyThresholdsParallel(startIdx, endIdx int, img *image.Gray, thresholds []uint8, wg *sync.WaitGroup) {
 	//korak od 3 jer Pix sadrzi za svaki piksel redom R, G, B kanale
 	for i := startIdx; i < endIdx; i++ {
 		for j := 0; j < len(thresholds); j++ {
@@ -118,38 +113,11 @@ func applyThresholds_parallel(startIdx, endIdx int, img *image.Gray, thresholds 
 	wg.Done()
 }
 
-//n_var = 1, wi = 0.9, wf = 0.4, cpi = 0.5, cpf = 2.5, cgi = 2.5, cgf = 0.5, particle_num = 10, iter_num = 10, tsallis_order = 4
-func main() {
-	var img, err = imgio.Open("../input/lena.png")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	//radimo segmentaciju samo greyscale slika
-	var rect = img.Bounds()
-	var img_grey = image.NewGray(rect)
-	draw.Draw(img_grey, rect, img, rect.Min, draw.Src)
-
-	var start = time.Now()
-	var thresholds = psoSerial(img_grey.Pix, 1, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, 100, 20, 4)
-	fmt.Print("Serial: " + time.Since(start).String() + " - ")
-	fmt.Println(thresholds)
-
-	start = time.Now()
-	thresholds = psoParallel(img_grey.Pix, 1, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, 100, 20, 4)
-	fmt.Print("Parallel: " + time.Since(start).String() + " - ")
-	fmt.Println(thresholds)
-
+func applyThresholdsParallel(img_grey *image.Gray, thresholds []uint8) {
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(4)
 	for i := 0; i < 4; i++ {
-		go applyThresholds_parallel(i*len(img_grey.Pix)/4, (i+1)*len(img_grey.Pix)/4, img_grey, thresholds, &waitGroup)
+		go _applyThresholdsParallel(i*len(img_grey.Pix)/4, (i+1)*len(img_grey.Pix)/4, img_grey, thresholds, &waitGroup)
 	}
 	waitGroup.Wait()
-
-	if err := imgio.Save("../output/output.png", img_grey, imgio.PNGEncoder()); err != nil {
-		fmt.Println(err)
-		return
-	}
 }

@@ -14,13 +14,15 @@ func applySuperPixels(w http.ResponseWriter, r *http.Request) {
 	var superpixelsDTO SuperpixelsDTO
 	json.Unmarshal(reqBody, &superpixelsDTO)
 
-	var img = loadImage("../input/lena.png")
+	var img = loadImage(superpixelsDTO.InputPath)
 
 	var bounds = img.Bounds()
 	var width, height = bounds.Max.X, bounds.Max.Y
 	var pixels = repackPixels(img)
 
-	if superpixelsDTO.Type == "parallel" {
+	const outputLocation = "../output/output.png"
+
+	if superpixelsDTO.Type == "true" {
 		var sp = SuperpixelsProcessorParallel{image: pixels, img_w: width, img_h: height, K: 2000, M: 20}
 		sp.initialize()
 		sp.initClusters()
@@ -31,7 +33,7 @@ func applySuperPixels(w http.ResponseWriter, r *http.Request) {
 			sp.assign()
 			sp.updateCluster()
 		}
-		sp.saveImage("../output/output.png", img)
+		sp.saveImage(outputLocation, img)
 		fmt.Println("Parallel: " + time.Since(start).String() + " - ")
 	} else {
 		var sp = SuperpixelsProcessor{image: pixels, img_w: width, img_h: height, K: 2000, M: 20}
@@ -44,9 +46,10 @@ func applySuperPixels(w http.ResponseWriter, r *http.Request) {
 			sp.assign()
 			sp.updateCluster()
 		}
-		sp.saveImage("../output/output.png", img)
+		sp.saveImage(outputLocation, img)
 		fmt.Println("Serial: " + time.Since(start).String() + " - ")
 	}
+	json.NewEncoder(w).Encode(outputLocation)
 }
 
 func main() {

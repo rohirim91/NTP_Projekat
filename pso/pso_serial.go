@@ -11,9 +11,9 @@ import (
 	"github.com/anthonynsimon/bild/imgio"
 )
 
-func psoSerial(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int) []uint8 {
+func psoSerial(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int, posSaveLocation string) []uint8 {
 	var all_positions [][]uint8
-	var thresh_num = n_var + 1
+	var all_values []float64
 	var best_position []float64
 	var best_value = math.Inf(-1)
 
@@ -58,6 +58,7 @@ func psoSerial(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, pa
 			population[j].value = tsallis(population[j].position, pixels, tsallis_order)
 
 			all_positions = append(all_positions, convertToUint8(population[j].position))
+			all_values = append(all_values, population[j].value)
 
 			if population[j].value > population[j].best_value {
 				population[j].best_position = population[j].position
@@ -77,7 +78,8 @@ func psoSerial(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, pa
 	//upisujemo samo ako imamo 2 ili 3 praga (samo te slucajeve iscrtavamo)
 	if thresh_num < 3 {
 		all_positions = append(all_positions, convertToUint8(best_position))
-		writePositionLog(all_positions)
+		all_values = append(all_values, best_value)
+		writePositionLog(all_positions, all_values, posSaveLocation)
 	}
 
 	return convertToUint8(best_position)
@@ -102,7 +104,7 @@ func applyThresholds(img *image.Gray, thresholds []uint8) {
 	}
 }
 
-//n_var = 1, wi = 0.9, wf = 0.4, cpi = 0.5, cpf = 2.5, cgi = 2.5, cgf = 0.5, particle_num = 10, iter_num = 10, tsallis_order = 4
+//thresh_num = 1, wi = 0.9, wf = 0.4, cpi = 0.5, cpf = 2.5, cgi = 2.5, cgf = 0.5, particle_num = 10, iter_num = 10, tsallis_order = 4
 func pso_serial_main() {
 	var img, err = imgio.Open("../input/lena.png")
 	if err != nil {
@@ -115,7 +117,9 @@ func pso_serial_main() {
 	var img_grey = image.NewGray(rect)
 	draw.Draw(img_grey, rect, img, rect.Min, draw.Src)
 
-	var thresholds = psoSerial(img_grey.Pix, 1, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, 100, 20, 4)
+	const posSaveLocation = "../output/all_positions.csv"
+
+	var thresholds = psoSerial(img_grey.Pix, 1, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, 100, 20, 4, posSaveLocation)
 	applyThresholds(img_grey, thresholds)
 	fmt.Println(thresholds)
 

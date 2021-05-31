@@ -10,8 +10,11 @@ import (
 )
 
 type PsoDTO struct {
-	InputPath string `json:"InputPath"`
-	Type      string `json:"Type"`
+	InputPath     string `json:"InputPath"`
+	Type          string `json:"Type"`
+	NumParticles  int    `json:"NumParticles"`
+	MaxIter       int    `json:"MaxIter"`
+	NumThresholds int    `json:"NumThresholds"`
 }
 
 type Particle struct {
@@ -112,10 +115,24 @@ func get_position(thresh_num int) []float64 {
 	return position
 }
 
-func writePositionLog(all_positions [][]uint8) {
-	f, err := os.Create("../output/all_positions.txt")
+func writePositionLog(all_positions [][]uint8, all_values []float64, posSaveLocation string) {
+	f, err := os.Create(posSaveLocation)
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+
+	var header string
+	for i := 0; i < len(all_positions[0]); i++ {
+		header += "t" + strconv.Itoa(i+1) + ","
+	}
+
+	header += "v\n"
+
+	_, err = f.WriteString(header)
+	if err != nil {
+		fmt.Println(err)
+		f.Close()
 		return
 	}
 
@@ -124,13 +141,11 @@ func writePositionLog(all_positions [][]uint8) {
 
 		for j := 0; j < len(all_positions[i]); j++ {
 			position += strconv.Itoa(int(all_positions[i][j]))
-
-			if j != len(all_positions[i])-1 {
-				position += ";"
-			} else {
-				position += "\n"
-			}
+			position += ","
 		}
+
+		position += strconv.FormatFloat(all_values[i], 'f', 5, 64)
+		position += "\n"
 
 		_, err := f.WriteString(position)
 		if err != nil {

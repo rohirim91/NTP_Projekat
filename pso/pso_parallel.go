@@ -8,9 +8,9 @@ import (
 	"sync"
 )
 
-func psoParallel(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int) []uint8 {
+func psoParallel(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int, posSaveLocation string) []uint8 {
 	var all_positions = make([][]uint8, iter_num*particle_num+1)
-	var thresh_num = n_var + 1
+	var all_values = make([]float64, iter_num*particle_num+1)
 	var best_position []float64
 	var best_value = math.Inf(-1)
 
@@ -41,7 +41,7 @@ func psoParallel(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, 
 	for i := 0; i < iter_num; i++ {
 		wg.Add(4)
 		for j := 0; j < 4; j++ {
-			go psoInnerLoop(i, j*len(population)/4, (j+1)*len(population)/4, particle_num, tsallis_order, w, cp, cg, population, pixels, all_positions, &best_position, &best_value, mutex, &wg)
+			go psoInnerLoop(i, j*len(population)/4, (j+1)*len(population)/4, particle_num, tsallis_order, w, cp, cg, population, pixels, all_positions, all_values, &best_position, &best_value, mutex, &wg)
 		}
 		wg.Wait()
 		w += deltaW
@@ -51,14 +51,15 @@ func psoParallel(pixels []uint8, n_var int, wi, wf, cpi, cpf, cgi, cgf float64, 
 
 	//upisujemo samo ako imamo 2 ili 3 praga (samo te slucajeve iscrtavamo)
 	if thresh_num < 3 {
-		all_positions[iter_num*particle_num-1] = convertToUint8(best_position)
-		writePositionLog(all_positions)
+		all_positions[iter_num*particle_num] = convertToUint8(best_position)
+		all_values[iter_num*particle_num] = best_value
+		writePositionLog(all_positions, all_values, posSaveLocation)
 	}
 
 	return convertToUint8(best_position)
 }
 
-func psoInnerLoop(iter_no, startIdx, endIdx, particle_num, tsallis_order int, w, cp, cg float64, population []Particle, pixels []uint8, all_positions [][]uint8, best_position *[]float64, best_value *float64, mutex *sync.Mutex, wg *sync.WaitGroup) {
+func psoInnerLoop(iter_no, startIdx, endIdx, particle_num, tsallis_order int, w, cp, cg float64, population []Particle, pixels []uint8, all_positions [][]uint8, all_values []float64, best_position *[]float64, best_value *float64, mutex *sync.Mutex, wg *sync.WaitGroup) {
 	for j := startIdx; j < endIdx; j++ {
 		var r1 = rand.Float64()
 		var r2 = rand.Float64()
@@ -77,6 +78,7 @@ func psoInnerLoop(iter_no, startIdx, endIdx, particle_num, tsallis_order int, w,
 		population[j].value = tsallis(population[j].position, pixels, tsallis_order)
 
 		all_positions[iter_no*particle_num+j] = convertToUint8(population[j].position)
+		all_values[iter_no*particle_num+j] = population[j].value
 
 		if population[j].value > population[j].best_value {
 			population[j].best_position = population[j].position

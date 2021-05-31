@@ -1,0 +1,13 @@
+{
+	"commentStamp" : "PetarNikolic 5/31/2021 23:29",
+	"super" : "ComposablePresenterWithModel",
+	"category" : "NTPProjekat",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [ ],
+	"instvars" : [
+		"form"
+	],
+	"name" : "NTPProjekatPresenter",
+	"type" : "normal"
+}

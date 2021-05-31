@@ -1,0 +1,20 @@
+{
+	"instance" : {
+		"spParallel:" : "PetarNikolic 5/31/2021 23:20",
+		"psoParallel:" : "PetarNikolic 5/31/2021 23:20",
+		"maxIter:" : "PetarNikolic 5/31/2021 23:20",
+		"spInputPath:" : "PetarNikolic 5/31/2021 23:20",
+		"spParallel" : "PetarNikolic 5/31/2021 23:20",
+		"numParticles" : "PetarNikolic 5/31/2021 23:20",
+		"initialize" : "PetarNikolic 5/31/2021 23:21",
+		"maxIter" : "PetarNikolic 5/31/2021 23:20",
+		"numThresholds" : "PetarNikolic 5/31/2021 23:20",
+		"numThresholds:" : "PetarNikolic 5/31/2021 23:20",
+		"numParticles:" : "PetarNikolic 5/31/2021 23:20",
+		"psoInputPath:" : "PetarNikolic 5/31/2021 23:20",
+		"psoParallel" : "PetarNikolic 5/31/2021 23:20",
+		"psoInputPath" : "PetarNikolic 5/31/2021 23:20",
+		"spInputPath" : "PetarNikolic 5/31/2021 23:20"
+	},
+	"class" : { }
+}

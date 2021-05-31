@@ -1,0 +1,19 @@
+{
+	"commentStamp" : "PetarNikolic 5/31/2021 23:19",
+	"super" : "Object",
+	"category" : "NTPProjekat",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [ ],
+	"instvars" : [
+		"spInputPath",
+		"spParallel",
+		"psoInputPath",
+		"numParticles",
+		"maxIter",
+		"numThresholds",
+		"psoParallel"
+	],
+	"name" : "NTPProjekatModel",
+	"type" : "normal"
+}

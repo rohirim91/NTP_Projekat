@@ -73,6 +73,9 @@ func psoInnerLoop(iter_no, startIdx, endIdx, particle_num, tsallis_order int, w,
 
 		population[j].speed = addVector(add1, mul2)
 		population[j].position = addVector(population[j].position, population[j].speed)
+
+		population[j].position = checkPositionInvalid(&population[j].position)
+
 		sort.Float64s(population[j].position)
 
 		population[j].value = tsallis(population[j].position, pixels, tsallis_order)

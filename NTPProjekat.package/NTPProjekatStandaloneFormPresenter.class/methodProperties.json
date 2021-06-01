@@ -1,5 +1,6 @@
 {
 	"instance" : {
+		"psoInputPathInput" : "PetarNikolic 5/31/2021 23:36",
 		"restoreButton:" : "PetarNikolic 5/31/2021 23:36",
 		"spParallelCheckboxInput" : "PetarNikolic 5/31/2021 23:36",
 		"psoPosLocation:" : "PetarNikolic 5/31/2021 23:36",
@@ -30,8 +31,9 @@
 		"spInputPathLabel:" : "PetarNikolic 5/31/2021 23:36",
 		"initializeWidgets" : "PetarNikolic 6/1/2021 00:08",
 		"maxIterInput" : "PetarNikolic 5/31/2021 23:36",
+		"psoShowResults2Thresholds" : "PetarNikolic 6/1/2021 04:06",
 		"modelChanged" : "PetarNikolic 5/31/2021 23:36",
-		"submitPso" : "PetarNikolic 5/31/2021 23:56",
+		"submitPso" : "PetarNikolic 6/1/2021 03:11",
 		"submitSpButton" : "PetarNikolic 5/31/2021 23:36",
 		"numThresholdsLabel:" : "PetarNikolic 5/31/2021 23:36",
 		"numParticlesLabel:" : "PetarNikolic 5/31/2021 23:36",
@@ -43,8 +45,8 @@
 		"spInputPathInput" : "PetarNikolic 5/31/2021 23:36",
 		"maxIterLabel" : "PetarNikolic 5/31/2021 23:36",
 		"submitSpButton:" : "PetarNikolic 5/31/2021 23:36",
+		"psoShowResults1Threshold" : "PetarNikolic 6/1/2021 04:03",
 		"fillFormWithWorkingModel" : "PetarNikolic 6/1/2021 00:05",
-		"psoInputPathInput" : "PetarNikolic 5/31/2021 23:36",
 		"restore" : "PetarNikolic 5/31/2021 23:38"
 	},
 	"class" : {

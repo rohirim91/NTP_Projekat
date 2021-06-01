@@ -115,6 +115,15 @@ func get_position(thresh_num int) []float64 {
 	return position
 }
 
+func checkPositionInvalid(position *[]float64) []float64 {
+	for i := 0; i < len(*position); i++ {
+		if !((*position)[i] > 0 && (*position)[i] < 256) {
+			(*position)[i] = rand.Float64() * 255
+		}
+	}
+	return *position
+}
+
 func writePositionLog(all_positions [][]uint8, all_values []float64, posSaveLocation string) {
 	f, err := os.Create(posSaveLocation)
 	if err != nil {
@@ -127,7 +136,7 @@ func writePositionLog(all_positions [][]uint8, all_values []float64, posSaveLoca
 		header += "t" + strconv.Itoa(i+1) + ","
 	}
 
-	header += "v\n"
+	header += "v,s\n"
 
 	_, err = f.WriteString(header)
 	if err != nil {
@@ -144,8 +153,13 @@ func writePositionLog(all_positions [][]uint8, all_values []float64, posSaveLoca
 			position += ","
 		}
 
-		position += strconv.FormatFloat(all_values[i], 'f', 5, 64)
-		position += "\n"
+		position += strconv.FormatFloat(all_values[i], 'f', 5, 64) + ","
+
+		if i == len(all_positions)-1 {
+			position += "1\n"
+		} else {
+			position += "0.1\n"
+		}
 
 		_, err := f.WriteString(position)
 		if err != nil {

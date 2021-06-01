@@ -3,10 +3,10 @@ initialize
 
 	super initialize.
 	
-	spInputPath  := ''.
+	spInputPath  := '../input/lena.png'.
 	spParallel  := true.
-	psoInputPath  := ''.
+	psoInputPath  := '../input/lena.png'.
 	psoParallel  := true.
 	numParticles  := 100.
 	maxIter  := 100.
-	numThresholds  := 2.
+	numThresholds  := 1.

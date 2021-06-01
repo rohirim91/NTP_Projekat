@@ -19,3 +19,8 @@ submitPso
    response.
 
 	self psoPosLocation: response contents allButLast allButLast allButFirst .
+	
+	(self model numThresholds == 1)
+		ifTrue: [ self psoShowResults1Threshold ] .
+	(self model numThresholds == 2)
+		ifTrue: [ self psoShowResults2Thresholds ]	.

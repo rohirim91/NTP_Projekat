@@ -48,7 +48,7 @@ func runPso(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(posSaveLocation)
+	json.NewEncoder(w).Encode("file:///D:/Fakultet/4.%20godina/NTP/Projekat/NTP_Projekat/output/all_positions.csv")
 }
 
 //thresh_num = 1, wi = 0.9, wf = 0.4, cpi = 0.5, cpf = 2.5, cgi = 2.5, cgf = 0.5, particle_num = 10, iter_num = 10, tsallis_order = 4

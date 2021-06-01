@@ -53,6 +53,9 @@ func psoSerial(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf float6
 
 			population[j].speed = addVector(add1, mul2)
 			population[j].position = addVector(population[j].position, population[j].speed)
+
+			population[j].position = checkPositionInvalid(&population[j].position)
+
 			sort.Float64s(population[j].position)
 
 			population[j].value = tsallis(population[j].position, pixels, tsallis_order)

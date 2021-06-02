@@ -14,7 +14,7 @@ psoShowResults1Threshold
 	ds := RTData new.
 	ds interaction fixedPopupText: [ :row | 't:' , (row value at: 1) asString , ' tsallis:' , (row value at: 2) asString ]. 
 	ds dotShape ellipse 
-		color: [:row | Color red:(0.7*(row value at: 2)**(1/4) * 255) + (0.3*(row value at: 3)*255) green:0 blue:255-(0.7*(row value at: 2)**(1/2.67) * 255) - (0.3*(row value at: 3)*255) alpha: 0.25 + (row value at: 3) ];
+		color: [:row | Color red:(0.7*(row value at: 2)**(1/4) * 255) + (0.3*(row value at: 3)*255) green:0 blue:255-(0.7*(row value at: 2)**(1/2.67) * 255) - (0.3*(row value at: 3)*255) alpha: 0.5 + (row value at: 3) ];
 		size: [:row | 3 + ((row value at: 3) * 5)].
 	ds points: data.
 	

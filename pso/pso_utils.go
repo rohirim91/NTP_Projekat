@@ -124,6 +124,24 @@ func checkPositionInvalid(position *[]float64) []float64 {
 	return *position
 }
 
+func checkWritten(position *[]uint8, writtenPos *[][]uint8) bool {
+	if len(*writtenPos) == 0 {
+		return false
+	}
+	for i := 0; i < len(*writtenPos); i++ {
+		var found = true
+		for j := 0; j < len(*position); j++ {
+			if (*writtenPos)[i][j] != (*position)[j] {
+				found = false
+			}
+		}
+		if found {
+			return true
+		}
+	}
+	return false
+}
+
 func writePositionLog(all_positions [][]uint8, all_values []float64, posSaveLocation string) {
 	f, err := os.Create(posSaveLocation)
 	if err != nil {
@@ -145,7 +163,13 @@ func writePositionLog(all_positions [][]uint8, all_values []float64, posSaveLoca
 		return
 	}
 
+	var writtenPos [][]uint8
 	for i := 0; i < len(all_positions); i++ {
+		if checkWritten(&(all_positions[i]), &writtenPos) && (i != len(all_positions)-1) {
+			continue
+		}
+		writtenPos = append(writtenPos, all_positions[i])
+
 		var position string
 
 		for j := 0; j < len(all_positions[i]); j++ {

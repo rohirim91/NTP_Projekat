@@ -33,10 +33,8 @@ func applySuperPixels(w http.ResponseWriter, r *http.Request) {
 		sp.initClusters()
 		sp.moveClusters()
 
-		for i := 0; i < 10; i++ {
-			sp.assign(n_cpu)
-			sp.updateCluster(n_cpu)
-		}
+		sp.assign(n_cpu)
+
 		fmt.Println("Completed in: " + time.Since(start).String())
 		sp.saveImage(outputLocation, img)
 	} else {

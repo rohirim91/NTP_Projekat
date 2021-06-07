@@ -7,6 +7,7 @@ import (
 	"image/draw"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -29,18 +30,28 @@ func runPso(w http.ResponseWriter, r *http.Request) {
 	draw.Draw(img_grey, rect, img, rect.Min, draw.Src)
 
 	var outputLocation = psoDTO.OutputPath
-	const posSaveLocation = "../output/all_positions.csv"
 
 	if psoDTO.Type == "true" {
-		fmt.Println("Running parallel PSO...")
+		for k := 0; k < 1; k++ {
+			rand.Seed(42)
 
-		var start = time.Now()
-		var thresholds, all_positions, all_values = psoParallel(img_grey.Pix, psoDTO.NumThresholds, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, psoDTO.MaxIter, psoDTO.NumParticles, 4)
-		fmt.Println("Completed in: " + time.Since(start).String())
+			// var img_grey = image.NewGray(rect)
+			// draw.Draw(img_grey, rect, img, rect.Min, draw.Src)
 
-		writePositionLog(all_positions, all_values, posSaveLocation)
-		applyThresholdsParallel(img_grey, thresholds)
+			var posSaveLocation = "../output/all_positions" + fmt.Sprint(k) + ".csv"
+
+			fmt.Println("Running parallel PSO...")
+
+			var start = time.Now()
+			var thresholds, all_positions, all_values = psoParallel(img_grey.Pix, psoDTO.NumThresholds, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, psoDTO.MaxIter, psoDTO.NumParticles, 4)
+			fmt.Println("Completed in: " + time.Since(start).String())
+
+			writePositionLog(all_positions, all_values, posSaveLocation)
+			applyThresholdsParallel(img_grey, thresholds)
+		}
 	} else {
+		const posSaveLocation = "../output/all_positions.csv"
+
 		fmt.Println("Running serial PSO...")
 
 		var start = time.Now()

@@ -12,6 +12,8 @@ import (
 )
 
 func psoSerial(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int) ([]uint8, [][]uint8, []float64) {
+	rand.Seed(42)
+
 	var all_positions [][]uint8
 	var all_values []float64
 	var best_position []float64
@@ -41,13 +43,10 @@ func psoSerial(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf float6
 
 	for i := 0; i < iter_num; i++ {
 		for j := 0; j < particle_num; j++ {
-			var r1 = rand.Float64()
-			var r2 = rand.Float64()
-
 			var sub1 []float64 = subVector(population[j].best_position, population[j].position)
 			var sub2 []float64 = subVector(best_position, population[j].position)
-			var mul1 []float64 = mulVectorConst(sub1, r1*cp)
-			var mul2 []float64 = mulVectorConst(sub2, r2*cg)
+			var mul1 []float64 = mulVectorConst(sub1, cp/2)
+			var mul2 []float64 = mulVectorConst(sub2, cg/2)
 			var mul3 []float64 = mulVectorConst(population[j].speed, w)
 			var add1 []float64 = addVector(mul1, mul3)
 
@@ -108,6 +107,8 @@ func applyThresholds(img *image.Gray, thresholds []uint8) {
 
 //thresh_num = 1, wi = 0.9, wf = 0.4, cpi = 0.5, cpf = 2.5, cgi = 2.5, cgf = 0.5, particle_num = 10, iter_num = 10, tsallis_order = 4
 func pso_serial_main() {
+	rand.Seed(42)
+
 	var img, err = imgio.Open("../input/lena.png")
 	if err != nil {
 		fmt.Println(err)

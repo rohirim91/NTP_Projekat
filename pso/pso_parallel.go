@@ -3,7 +3,6 @@ package main
 import (
 	"image"
 	"math"
-	"math/rand"
 	"sort"
 	"sync"
 )
@@ -35,19 +34,16 @@ func psoParallel(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf floa
 
 		population = append(population, Particle{speed: make([]float64, thresh_num), position: pos, best_position: pos, value: fpoz, best_value: fpoz})
 	}
+	//fmt.Println(population)
 	var mutex = &sync.Mutex{}
 	var wg sync.WaitGroup
 	var n_cpu = 4
-	for i := 0; i < iter_num; i++ {
-		wg.Add(n_cpu)
-		for j := 0; j < n_cpu; j++ {
-			go psoInnerLoop(i, j*len(population)/n_cpu, (j+1)*len(population)/n_cpu, particle_num, tsallis_order, w, cp, cg, population, pixels, all_positions, all_values, &best_position, &best_value, mutex, &wg)
-		}
-		wg.Wait()
-		w += deltaW
-		cp += deltaCp
-		cg -= deltaCg
+	wg.Add(n_cpu)
+	for j := 0; j < n_cpu-1; j++ {
+		go psoInnerLoop(iter_num, deltaW, deltaCp, deltaCg, j*len(population)/n_cpu, (j+1)*len(population)/n_cpu, particle_num, tsallis_order, w, cp, cg, population, pixels, all_positions, all_values, &best_position, &best_value, mutex, &wg)
 	}
+	psoInnerLoop(iter_num, deltaW, deltaCp, deltaCg, 3*len(population)/n_cpu, (3+1)*len(population)/n_cpu, particle_num, tsallis_order, w, cp, cg, population, pixels, all_positions, all_values, &best_position, &best_value, mutex, &wg)
+	wg.Wait()
 
 	//upisujemo samo ako imamo 2 ili 3 praga (samo te slucajeve iscrtavamo)
 	if thresh_num < 3 {
@@ -58,41 +54,44 @@ func psoParallel(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf floa
 	return convertToUint8(best_position), all_positions, all_values
 }
 
-func psoInnerLoop(iter_no, startIdx, endIdx, particle_num, tsallis_order int, w, cp, cg float64, population []Particle, pixels []uint8, all_positions [][]uint8, all_values []float64, best_position *[]float64, best_value *float64, mutex *sync.Mutex, wg *sync.WaitGroup) {
-	for j := startIdx; j < endIdx; j++ {
-		var r1 = rand.Float64()
-		var r2 = rand.Float64()
+func psoInnerLoop(iter_num int, deltaW, deltaCp, deltaCg float64, startIdx, endIdx, particle_num, tsallis_order int, w, cp, cg float64, population []Particle, pixels []uint8, all_positions [][]uint8, all_values []float64, best_position *[]float64, best_value *float64, mutex *sync.Mutex, wg *sync.WaitGroup) {
+	for iter_no := 0; iter_no < iter_num; iter_no++ {
+		for j := startIdx; j < endIdx; j++ {
+			var sub1 []float64 = subVector(population[j].best_position, population[j].position)
 
-		var sub1 []float64 = subVector(population[j].best_position, population[j].position)
-		var sub2 []float64 = subVector(*best_position, population[j].position)
-		var mul1 []float64 = mulVectorConst(sub1, r1*cp)
-		var mul2 []float64 = mulVectorConst(sub2, r2*cg)
-		var mul3 []float64 = mulVectorConst(population[j].speed, w)
-		var add1 []float64 = addVector(mul1, mul3)
+			var sub2 []float64 = subVector(*best_position, population[j].position)
+			var mul1 []float64 = mulVectorConst(sub1, cp/2)
+			var mul2 []float64 = mulVectorConst(sub2, cg/2)
+			var mul3 []float64 = mulVectorConst(population[j].speed, w)
+			var add1 []float64 = addVector(mul1, mul3)
 
-		population[j].speed = addVector(add1, mul2)
-		population[j].position = addVector(population[j].position, population[j].speed)
+			population[j].speed = addVector(add1, mul2)
+			population[j].position = addVector(population[j].position, population[j].speed)
 
-		population[j].position = checkPositionInvalid(&population[j].position)
+			population[j].position = checkPositionInvalid(&population[j].position)
 
-		sort.Float64s(population[j].position)
+			sort.Float64s(population[j].position)
 
-		population[j].value = tsallis(population[j].position, pixels, tsallis_order)
+			population[j].value = tsallis(population[j].position, pixels, tsallis_order)
 
-		all_positions[iter_no*particle_num+j] = convertToUint8(population[j].position)
-		all_values[iter_no*particle_num+j] = population[j].value
+			all_positions[iter_no*particle_num+j] = convertToUint8(population[j].position)
+			all_values[iter_no*particle_num+j] = population[j].value
 
-		if population[j].value > population[j].best_value {
-			population[j].best_position = population[j].position
-			population[j].best_value = population[j].value
+			if population[j].value > population[j].best_value {
+				population[j].best_position = population[j].position
+				population[j].best_value = population[j].value
 
-			mutex.Lock()
-			if population[j].best_value > *best_value {
-				*best_position = population[j].best_position
-				*best_value = population[j].best_value
+				mutex.Lock()
+				if population[j].best_value > *best_value {
+					*best_position = population[j].best_position
+					*best_value = population[j].best_value
+				}
+				mutex.Unlock()
 			}
-			mutex.Unlock()
 		}
+		w += deltaW
+		cp += deltaCp
+		cg -= deltaCg
 	}
 	wg.Done()
 }

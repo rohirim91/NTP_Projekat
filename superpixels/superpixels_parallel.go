@@ -88,17 +88,9 @@ func (sp *SuperpixelsProcessorParallel) moveClusters() {
 	}
 }
 
-func (sp *SuperpixelsProcessorParallel) updateCluster(n_cpu int) {
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(n_cpu)
-	for i := 0; i < n_cpu; i++ {
-		go sp._updateCluster_parallel(i*len(sp.clusters)/n_cpu, (i+1)*len(sp.clusters)/n_cpu, &waitGroup)
-	}
-	waitGroup.Wait()
-}
-
-func (sp *SuperpixelsProcessorParallel) _updateCluster_parallel(startIdx, endIdx int, wg *sync.WaitGroup) {
+func (sp *SuperpixelsProcessorParallel) updateCluster(startIdx, endIdx int, mutex *sync.Mutex) {
 	for i := startIdx; i < endIdx; i++ {
+		mutex.Lock()
 		if len(sp.clusters[i].pixels) != 0 {
 			var sum_h, sum_w = 0, 0
 
@@ -111,8 +103,8 @@ func (sp *SuperpixelsProcessorParallel) _updateCluster_parallel(startIdx, endIdx
 			var _w = int(sum_w / len(sp.clusters[i].pixels))
 			sp.clusters[i].update(_h, _w, sp.image[_h][_w][0], sp.image[_h][_w][1], sp.image[_h][_w][2])
 		}
+		mutex.Unlock()
 	}
-	wg.Done()
 }
 
 func (sp *SuperpixelsProcessorParallel) checkLabel(h, w int) bool {
@@ -150,47 +142,51 @@ func (sp *SuperpixelsProcessorParallel) assign(n_cpu int) {
 	var mutex = &sync.Mutex{}
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(n_cpu)
-	for i := 0; i < n_cpu; i++ {
+	for i := 0; i < n_cpu-1; i++ {
 		go sp._assign_parallel(i*len(sp.clusters)/n_cpu, (i+1)*len(sp.clusters)/n_cpu, mutex, &waitGroup)
 	}
+	sp._assign_parallel(3*len(sp.clusters)/n_cpu, (3+1)*len(sp.clusters)/n_cpu, mutex, &waitGroup)
 	waitGroup.Wait()
 }
 
 func (sp *SuperpixelsProcessorParallel) _assign_parallel(startIdx, endIdx int, mutex *sync.Mutex, wg *sync.WaitGroup) {
-	for i := startIdx; i < endIdx; i++ {
-		for h := sp.clusters[i].h - 2*sp.S; h < sp.clusters[i].h+2*sp.S; h++ {
-			if h < 0 || h >= sp.img_h {
-				continue
-			}
-			for w := sp.clusters[i].w - 2*sp.S; w < sp.clusters[i].w+2*sp.S; w++ {
-				if w < 0 || w >= sp.img_w {
+	for iterNum := 0; iterNum < 10; iterNum++ {
+		for i := startIdx; i < endIdx; i++ {
+			for h := sp.clusters[i].h - 2*sp.S; h < sp.clusters[i].h+2*sp.S; h++ {
+				if h < 0 || h >= sp.img_h {
 					continue
 				}
-				var l, a, b = sp.image[h][w][0], sp.image[h][w][1], sp.image[h][w][2]
-				var dc = math.Sqrt(math.Pow(float64(l-sp.clusters[i].l), 2) +
-					math.Pow(float64(a-sp.clusters[i].a), 2) +
-					math.Pow(float64(b-sp.clusters[i].b), 2))
-				var ds = math.Sqrt(math.Pow(float64(h-sp.clusters[i].h), 2) +
-					math.Pow(float64(w-sp.clusters[i].w), 2))
-				var d = math.Sqrt(math.Pow(dc/sp.M, 2) + math.Pow(ds/float64(sp.S), 2))
-
-				if d < sp.dist[h][w] {
-					if !sp.checkLabel(h, w) {
-						mutex.Lock()
-						sp.clusters[i].pixels = append(sp.clusters[i].pixels, []int{h, w})
-						sp.label = append(sp.label, Label{h: h, w: w, cluster: &sp.clusters[i]})
-						mutex.Unlock()
-					} else {
-						sp.removeLabelPixelsValue(h, w, mutex)
-						mutex.Lock()
-						sp.clusters[i].pixels = append(sp.clusters[i].pixels, []int{h, w})
-						mutex.Unlock()
-						sp.updateLabel(h, w, &sp.clusters[i], mutex)
+				for w := sp.clusters[i].w - 2*sp.S; w < sp.clusters[i].w+2*sp.S; w++ {
+					if w < 0 || w >= sp.img_w {
+						continue
 					}
-					sp.dist[h][w] = d
+					var l, a, b = sp.image[h][w][0], sp.image[h][w][1], sp.image[h][w][2]
+					var dc = math.Sqrt(math.Pow(float64(l-sp.clusters[i].l), 2) +
+						math.Pow(float64(a-sp.clusters[i].a), 2) +
+						math.Pow(float64(b-sp.clusters[i].b), 2))
+					var ds = math.Sqrt(math.Pow(float64(h-sp.clusters[i].h), 2) +
+						math.Pow(float64(w-sp.clusters[i].w), 2))
+					var d = math.Sqrt(math.Pow(dc/sp.M, 2) + math.Pow(ds/float64(sp.S), 2))
+
+					if d < sp.dist[h][w] {
+						if !sp.checkLabel(h, w) {
+							mutex.Lock()
+							sp.clusters[i].pixels = append(sp.clusters[i].pixels, []int{h, w})
+							sp.label = append(sp.label, Label{h: h, w: w, cluster: &sp.clusters[i]})
+							mutex.Unlock()
+						} else {
+							sp.removeLabelPixelsValue(h, w, mutex)
+							mutex.Lock()
+							sp.clusters[i].pixels = append(sp.clusters[i].pixels, []int{h, w})
+							mutex.Unlock()
+							sp.updateLabel(h, w, &sp.clusters[i], mutex)
+						}
+						sp.dist[h][w] = d
+					}
 				}
 			}
 		}
+		sp.updateCluster(startIdx, endIdx, mutex)
 	}
 	wg.Done()
 }

@@ -119,7 +119,7 @@ func get_position(thresh_num int) []float64 {
 func checkPositionInvalid(position *[]float64) []float64 {
 	for i := 0; i < len(*position); i++ {
 		if !((*position)[i] > 0 && (*position)[i] < 256) {
-			(*position)[i] = rand.Float64() * 255
+			(*position)[i] = 128
 		}
 	}
 	return *position
@@ -164,13 +164,7 @@ func writePositionLog(all_positions [][]uint8, all_values []float64, posSaveLoca
 		return
 	}
 
-	var writtenPos [][]uint8
 	for i := 0; i < len(all_positions); i++ {
-		if checkWritten(&(all_positions[i]), &writtenPos) && (i != len(all_positions)-1) {
-			continue
-		}
-		writtenPos = append(writtenPos, all_positions[i])
-
 		var position string
 
 		for j := 0; j < len(all_positions[i]); j++ {

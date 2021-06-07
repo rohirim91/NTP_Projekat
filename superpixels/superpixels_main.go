@@ -20,34 +20,41 @@ func applySuperPixels(w http.ResponseWriter, r *http.Request) {
 	var width, height = bounds.Max.X, bounds.Max.Y
 	var pixels = repackPixels(img)
 
-	const outputLocation = "../output/output.png"
+	var outputLocation = superpixelsDTO.OutputPath
 
 	if superpixelsDTO.Type == "true" {
+		fmt.Println("Running parallel Superpixels...")
+
+		var n_cpu = 4
 		var sp = SuperpixelsProcessorParallel{image: pixels, img_w: width, img_h: height, K: 2000, M: 20}
+
+		var start = time.Now()
 		sp.initialize()
 		sp.initClusters()
 		sp.moveClusters()
 
-		var start = time.Now()
 		for i := 0; i < 10; i++ {
-			sp.assign()
-			sp.updateCluster()
+			sp.assign(n_cpu)
+			sp.updateCluster(n_cpu)
 		}
+		fmt.Println("Completed in: " + time.Since(start).String())
 		sp.saveImage(outputLocation, img)
-		fmt.Println("Parallel: " + time.Since(start).String() + " - ")
 	} else {
+		fmt.Println("Running serial Superpixels...")
+
 		var sp = SuperpixelsProcessor{image: pixels, img_w: width, img_h: height, K: 2000, M: 20}
+
+		var start = time.Now()
 		sp.initialize()
 		sp.initClusters()
 		sp.moveClusters()
 
-		var start = time.Now()
 		for i := 0; i < 10; i++ {
 			sp.assign()
 			sp.updateCluster()
 		}
+		fmt.Println("Completed in: " + time.Since(start).String())
 		sp.saveImage(outputLocation, img)
-		fmt.Println("Serial: " + time.Since(start).String() + " - ")
 	}
 	json.NewEncoder(w).Encode(outputLocation)
 }

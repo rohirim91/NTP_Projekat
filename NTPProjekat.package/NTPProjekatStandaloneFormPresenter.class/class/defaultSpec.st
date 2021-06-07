@@ -16,6 +16,11 @@ defaultSpec
 			height: rowHeight.
 		
 			col newRow: [ :row | 
+				row add: #spOutputPathLabel right: labelsWidth.
+				row add: #spOutputPathInput ]
+			height: rowHeight.
+			
+			col newRow: [ :row | 
 				row add: #spParallelCheckboxLabel right: labelsWidth.
 				row add: #spParallelCheckboxInput ]
 			height: rowHeight.
@@ -25,6 +30,11 @@ defaultSpec
 				row add: #psoInputPathInput ]
 			height: rowHeight.
 
+			col newRow: [ :row | 
+				row add: #psoOutputPathLabel right: labelsWidth.
+				row add: #psoOutputPathInput ]
+			height: rowHeight.
+			
 		col newRow: [ :row | 
 				row add: #psoParallelCheckboxLabel right: labelsWidth.
 				row add: #psoParallelCheckboxInput ]

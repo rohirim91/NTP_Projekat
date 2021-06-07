@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func psoParallel(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int, posSaveLocation string) []uint8 {
+func psoParallel(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf float64, particle_num, iter_num int, tsallis_order int) ([]uint8, [][]uint8, []float64) {
 	var all_positions = make([][]uint8, iter_num*particle_num+1)
 	var all_values = make([]float64, iter_num*particle_num+1)
 	var best_position []float64
@@ -35,13 +35,13 @@ func psoParallel(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf floa
 
 		population = append(population, Particle{speed: make([]float64, thresh_num), position: pos, best_position: pos, value: fpoz, best_value: fpoz})
 	}
-
 	var mutex = &sync.Mutex{}
 	var wg sync.WaitGroup
+	var n_cpu = 4
 	for i := 0; i < iter_num; i++ {
-		wg.Add(4)
-		for j := 0; j < 4; j++ {
-			go psoInnerLoop(i, j*len(population)/4, (j+1)*len(population)/4, particle_num, tsallis_order, w, cp, cg, population, pixels, all_positions, all_values, &best_position, &best_value, mutex, &wg)
+		wg.Add(n_cpu)
+		for j := 0; j < n_cpu; j++ {
+			go psoInnerLoop(i, j*len(population)/n_cpu, (j+1)*len(population)/n_cpu, particle_num, tsallis_order, w, cp, cg, population, pixels, all_positions, all_values, &best_position, &best_value, mutex, &wg)
 		}
 		wg.Wait()
 		w += deltaW
@@ -53,10 +53,9 @@ func psoParallel(pixels []uint8, thresh_num int, wi, wf, cpi, cpf, cgi, cgf floa
 	if thresh_num < 3 {
 		all_positions[iter_num*particle_num] = convertToUint8(best_position)
 		all_values[iter_num*particle_num] = best_value
-		writePositionLog(all_positions, all_values, posSaveLocation)
 	}
 
-	return convertToUint8(best_position)
+	return convertToUint8(best_position), all_positions, all_values
 }
 
 func psoInnerLoop(iter_no, startIdx, endIdx, particle_num, tsallis_order int, w, cp, cg float64, population []Particle, pixels []uint8, all_positions [][]uint8, all_values []float64, best_position *[]float64, best_value *float64, mutex *sync.Mutex, wg *sync.WaitGroup) {

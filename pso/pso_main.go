@@ -28,19 +28,27 @@ func runPso(w http.ResponseWriter, r *http.Request) {
 	var img_grey = image.NewGray(rect)
 	draw.Draw(img_grey, rect, img, rect.Min, draw.Src)
 
-	const outputLocation = "../output/output.png"
+	var outputLocation = psoDTO.OutputPath
 	const posSaveLocation = "../output/all_positions.csv"
 
 	if psoDTO.Type == "true" {
+		fmt.Println("Running parallel PSO...")
+
 		var start = time.Now()
-		var thresholds = psoParallel(img_grey.Pix, psoDTO.NumThresholds, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, psoDTO.MaxIter, psoDTO.NumParticles, 4, posSaveLocation)
+		var thresholds, all_positions, all_values = psoParallel(img_grey.Pix, psoDTO.NumThresholds, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, psoDTO.MaxIter, psoDTO.NumParticles, 4)
+		fmt.Println("Completed in: " + time.Since(start).String())
+
+		writePositionLog(all_positions, all_values, posSaveLocation)
 		applyThresholdsParallel(img_grey, thresholds)
-		fmt.Println("Parallel: " + time.Since(start).String() + " - ")
 	} else {
+		fmt.Println("Running serial PSO...")
+
 		var start = time.Now()
-		var thresholds = psoSerial(img_grey.Pix, psoDTO.NumThresholds, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, psoDTO.MaxIter, psoDTO.NumParticles, 4, posSaveLocation)
+		var thresholds, all_positions, all_values = psoSerial(img_grey.Pix, psoDTO.NumThresholds, 0.9, 0.4, 0.5, 2.5, 2.5, 0.5, psoDTO.MaxIter, psoDTO.NumParticles, 4)
+		fmt.Println("Completed in: " + time.Since(start).String())
+
+		writePositionLog(all_positions, all_values, posSaveLocation)
 		applyThresholds(img_grey, thresholds)
-		fmt.Println("Serial: " + time.Since(start).String() + " - ")
 	}
 
 	if err := imgio.Save(outputLocation, img_grey, imgio.PNGEncoder()); err != nil {

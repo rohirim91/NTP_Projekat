@@ -88,11 +88,11 @@ func (sp *SuperpixelsProcessorParallel) moveClusters() {
 	}
 }
 
-func (sp *SuperpixelsProcessorParallel) updateCluster() {
+func (sp *SuperpixelsProcessorParallel) updateCluster(n_cpu int) {
 	var waitGroup sync.WaitGroup
-	waitGroup.Add(4)
-	for i := 0; i < 4; i++ {
-		go sp._updateCluster_parallel(i*len(sp.clusters)/4, (i+1)*len(sp.clusters)/4, &waitGroup)
+	waitGroup.Add(n_cpu)
+	for i := 0; i < n_cpu; i++ {
+		go sp._updateCluster_parallel(i*len(sp.clusters)/n_cpu, (i+1)*len(sp.clusters)/n_cpu, &waitGroup)
 	}
 	waitGroup.Wait()
 }
@@ -146,12 +146,12 @@ func (sp *SuperpixelsProcessorParallel) removeLabelPixelsValue(h, w int, mutex *
 	}
 }
 
-func (sp *SuperpixelsProcessorParallel) assign() {
+func (sp *SuperpixelsProcessorParallel) assign(n_cpu int) {
 	var mutex = &sync.Mutex{}
 	var waitGroup sync.WaitGroup
-	waitGroup.Add(4)
-	for i := 0; i < 4; i++ {
-		go sp._assign_parallel(i*len(sp.clusters)/4, (i+1)*len(sp.clusters)/4, mutex, &waitGroup)
+	waitGroup.Add(n_cpu)
+	for i := 0; i < n_cpu; i++ {
+		go sp._assign_parallel(i*len(sp.clusters)/n_cpu, (i+1)*len(sp.clusters)/n_cpu, mutex, &waitGroup)
 	}
 	waitGroup.Wait()
 }

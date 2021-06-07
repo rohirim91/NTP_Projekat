@@ -3,12 +3,18 @@ initializeWidgets
 
 	spInputPathLabel := self newLabel label: 'Superpixels Input Path:'.
 	spInputPathInput := self newTextInput autoAccept: true.
+
+	spOutputPathLabel := self newLabel label: 'Superpixels Otput Path:'.
+	spOutputPathInput := self newTextInput autoAccept: true.
 	
 	spParallelCheckboxLabel := self newLabel label: 'Parallel:'.
 	spParallelCheckboxInput := self newCheckBox state: true.
 
 	psoInputPathLabel := self newLabel label: 'PSO Input Path:'.
 	psoInputPathInput := self newTextInput autoAccept: true.
+	
+	psoOutputPathLabel := self newLabel label: 'PSO Output Path:'.
+	psoOutputPathInput := self newTextInput autoAccept: true.
 	
 	numParticlesLabel := self newLabel label: 'Num. Particles:'.
 	numParticlesInput := self newTextInput autoAccept: true.
@@ -28,8 +34,10 @@ initializeWidgets
 
 	self focusOrder
 		add: spInputPathInput ;
+		add: spOutputPathInput ;
 		add: spParallelCheckboxInput ;
 		add: psoInputPathInput ;
+		add: psoOutputPathInput ;
 		add: psoParallelCheckboxInput ;
 		add: numParticlesInput ;
 		add: maxIterInput ;

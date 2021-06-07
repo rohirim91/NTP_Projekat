@@ -10,7 +10,9 @@ submitPso
 	response := (ZnClient new)
    url: 'http://localhost:8082/pso';
    entity: (ZnEntity
-               with: '{"InputPath": "' , self model psoInputPath , '","Type": "' , self model 					psoParallel asString , 
+               with: '{"InputPath": "' , self model psoInputPath , 
+							'","OutputPath": "' , self model psoOutputPath , 
+							'","Type": "' , self model psoParallel asString , 
 							'","NumParticles": ' , self model numParticles asString , 
 							',"MaxIter": ' , self model maxIter asString ,
 							',"NumThresholds": ' , self model numThresholds asString , '}'

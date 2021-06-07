@@ -9,8 +9,9 @@ import (
 )
 
 type SuperpixelsDTO struct {
-	InputPath string `json:"InputPath"`
-	Type      string `json:"Type"`
+	InputPath  string `json:"InputPath"`
+	OutputPath string `json:"OutputPath"`
+	Type       string `json:"Type"`
 }
 
 type Cluster struct {

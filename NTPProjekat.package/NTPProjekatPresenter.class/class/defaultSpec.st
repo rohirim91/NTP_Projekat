@@ -5,8 +5,8 @@ defaultSpec
 	| fontWidth formWidth |
 	fontWidth := (StandardFonts defaultFont widthOfString: 'M').
 	formWidth := fontWidth * 33.
-	
-	^ SpecLayout composed
+		
+	^ SpecRowLayout composed
 		newRow: [ :row | 
-			row add: #form right: formWidth.];
+			row add: #form right: formWidth .] ;
 		yourself.	

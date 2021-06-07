@@ -11,6 +11,7 @@ import (
 
 type PsoDTO struct {
 	InputPath     string `json:"InputPath"`
+	OutputPath    string `json:"OutputPath"`
 	Type          string `json:"Type"`
 	NumParticles  int    `json:"NumParticles"`
 	MaxIter       int    `json:"MaxIter"`

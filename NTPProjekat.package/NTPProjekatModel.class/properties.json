@@ -7,8 +7,10 @@
 	"classvars" : [ ],
 	"instvars" : [
 		"spInputPath",
+		"spOutputPath",
 		"spParallel",
 		"psoInputPath",
+		"psoOutputPath",
 		"numParticles",
 		"maxIter",
 		"numThresholds",
